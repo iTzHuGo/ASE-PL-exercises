@@ -1,0 +1,44 @@
+name: Generate and Deploy HTML Docs
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install -g html-validate
+
+      - name: Validate HTML files
+        run: html-validate docs/**/*.html || true  # Adjust path to your HTML files
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true  # Enable Pages if not already enabled
+
+      - name: Upload documentation
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs  # Adjust to your HTML files directory, e.g., 'public' or 'dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}

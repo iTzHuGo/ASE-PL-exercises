@@ -1,0 +1,42 @@
+name: CI with Docker for HTML
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t html-app .
+
+      - name: Validate HTML inside container
+        run: docker run html-app html-validate ./**/*.html || true  # Adjust path to your HTML files
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true  # Enable Pages if not already enabled
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .  # Adjust to your HTML files directory, e.g., 'public' or 'dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
